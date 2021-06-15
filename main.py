@@ -2,60 +2,64 @@
 import pandas as pd
 
 # Statistical computing
-import statsmodels as sm
+import statsmodels.api as sm
 from statsmodels.tsa.arima.model import ARIMA
 
 # Data Plotting and Visualisation
 import matplotlib.pyplot as plt
 import seaborn as sns  # Advanced visualization based on matplotlib
 
+# Custom files
+import data_functions
+import visual_functions
+
 # Data path and links
 calculated_data_folder = "calculated_data/"
 raw_data_folder = "raw_data/"
-sales_data_csv = ["burgrill_sales_2020_12.csv",
-                  "burgrill_sales_2021_01.csv",
-                  "burgrill_sales_2021_02.csv",
-                  "burgrill_sales_2021_03.csv",
-                  "burgrill_sales_2021_04.csv",
-                  "burgrill_sales_2021_05.csv"]
-purchase_data_csv = ["burgrill_purchase_2020_12_2021_05"]
+sales_data_csv_list = [
+    "burgrill_sales_2020_12.csv",
+    "burgrill_sales_2021_01.csv",
+    "burgrill_sales_2021_02.csv",
+    "burgrill_sales_2021_03.csv",
+    "burgrill_sales_2021_04.csv",
+    "burgrill_sales_2021_05.csv",
+]
+purchase_data_csv_list = [
+    "burgrill_purchase_2020_12_2021_05.csv",
+]
 
+# Combining data
+sales_data = data_functions.combine_data(raw_data_folder, sales_data_csv_list)
 
-def plot_line_graph(data, x_axis, y_axis, title):
-    # data.plot(x=x_axis, y=y_axis, kind="line")
-    graph_data = sns.load_dataset(data)
-    sns.lineplot(data=graph_data, x=x_axis, y=y_axis)
-    # plt.title(title)
-    # plt.show()
+# Cleaning data
+sales_data = data_functions.clean_zoho_data(sales_data)
 
+# Extracting products data
+# Product ID, Product Name, Product Unit, Usage Starting Date, Usage Ending Date,
+# Total Sold Qty, Total Orders, Avg. Qty Sold/Order, Avg. Order Frequency,
+# Min. Price, Max. Price, Avg. Price
+products_list = sales_data["Item Name"].unique()
+print(products_list)
+products_data = 0
 
-# Loading data into pandas dataframe
-def load_data(data_link):
-    print(f"Generating pandas dataframe from: {raw_data_folder + data_link}")
-    df = pd.read_csv(data_link)
-    print(df.info())
-    return df
+# Extracting customers data
+# Customer ID, Customer Name, Order Starting Date, Order Ending Date,
+# Total Sold Qty, Total Orders, Avg. Qty Sold/Order, Avg. Order Frequency,
+# Min. Price, Max. Price, Avg. Price
+customers_data = 0
 
+# Sales data
+daily_sales_data = sales_data["Item Total"].resample("D").sum()
+weekly_sales_data = sales_data["Item Total"].resample("W-MON").sum()
+monthly_sales_data = sales_data["Item Total"].resample("MS").sum()
 
-def clean_zoho_data(df):
-    cleaned_df = df.copy()
+# Visual data
+visual_functions.show_data(daily_sales_data)
+# visual_functions.show_data(weekly_sales_data)
+# visual_functions.show_data(monthly_sales_data)
 
-    # Change dates to datetime object
-    cleaned_df["Invoice Date"] = pd.to_datetime(cleaned_df["Invoice Date"], format="%Y-%m-%d")
-    cleaned_df["Due Date"] = pd.to_datetime(cleaned_df["Due Date"], format="%Y-%m-%d")
-
-    # Remove "Draft" and "Void" data
-    # print(cleaned_burgrill_df["Invoice Status"].unique())
-    cleaned_df = cleaned_df[(cleaned_df["Invoice Status"] != "Draft") & (cleaned_df["Invoice Status"] != "Void")]
-
-    # Remove non-burgrill customers
-    cleaned_df = cleaned_df[cleaned_df["Customer Name"].str.contains("DBH -")]
-    cleaned_df = cleaned_df[cleaned_df["Customer Name"] != "DBH - Damaged Products - Okhla, Delhi"]
-
-    # Remove NaN values
-    cleaned_df = cleaned_df.fillna("")
-
-    return cleaned_df
+# TSD
+visual_functions.time_series_decomposition(daily_sales_data)
 
 
 def daily_sales_data(df):
@@ -108,7 +112,7 @@ def time_plot(df, x_col, y_col, title):
 
 # Generating separate dataframes for difference months
 sales_dfs = []
-for file_link in sales_data_csv:
+for file_link in sales_data_csv_list:
     sales_dfs.append(load_data(raw_data_folder + file_link))
 
 # Combine multiple dataframes into one
