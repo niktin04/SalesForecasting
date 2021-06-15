@@ -1,2 +1,4 @@
 # Project exclude paths
 /venv/
+/raw_data/
+/calculated_data/
