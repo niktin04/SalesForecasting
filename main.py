@@ -12,6 +12,7 @@ import seaborn as sns  # Advanced visualization based on matplotlib
 # Custom files
 import data_functions
 import visual_functions
+import forecasting_functions
 
 # Data path and links
 calculated_data_folder = "calculated_data/"
