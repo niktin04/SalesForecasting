@@ -1,5 +1,6 @@
 # Data manipulation
 import pandas as pd
+import numpy as np
 
 # Statistical computing
 import statsmodels.api as sm
@@ -9,7 +10,7 @@ from statsmodels.tsa.arima.model import ARIMA
 import matplotlib.pyplot as plt
 import seaborn as sns  # Advanced visualization based on matplotlib
 
-# Custom files
+# Custom functions
 import data_functions
 import visual_functions
 import forecasting_functions
@@ -49,67 +50,30 @@ products_data = 0
 # Min. Price, Max. Price, Avg. Price
 customers_data = 0
 
-# Sales data
-daily_sales_data = sales_data["Item Total"].resample("D").sum()
-weekly_sales_data = sales_data["Item Total"].resample("W-MON").sum()
-monthly_sales_data = sales_data["Item Total"].resample("MS").sum()
+# Sales data: Daily, Weekly, Monthly
+daily_sales_data = sales_data["Item Total"].resample("D").sum()  # D for day
+weekly_sales_data = sales_data["Item Total"].resample("W-MON").sum()  # W for week, MON for Monday as start of the week
+monthly_sales_data = sales_data["Item Total"].resample("MS").sum()  # M for month, S for starting date of the month
 
 # Visual data
 visual_functions.show_data(daily_sales_data)
-# visual_functions.show_data(weekly_sales_data)
-# visual_functions.show_data(monthly_sales_data)
+visual_functions.show_data(weekly_sales_data)
+visual_functions.show_data(monthly_sales_data)
 
-# TSD
+# Time Series Decomposition
+# Data must have 2 complete cycles, or minimum 104 observations in the time series
 visual_functions.time_series_decomposition(daily_sales_data)
+# visual_functions.time_series_decomposition(weekly_sales_data) # 26 observations only
+# visual_functions.time_series_decomposition(monthly_sales_data) # 5 observations only
 
-
-def daily_sales_data(df):
-    daily_sales_df = df.copy()
-
-    # Sum of sales per day
-    daily_sales_df = daily_sales_df.groupby("Invoice Date")["Item Total"].sum().reset_index()
-
-    return daily_sales_df
-
-
-def weekly_sales_data(df):
-    weekly_sales_df = df.copy()
-
-    # Adding "Invoice Week" column
-    weekly_sales_df["Invoice Week"] = pd.to_datetime("1-" + weekly_sales_df["Invoice Date"].dt.strftime("%W-%Y"),
-                                                     format="%w-%W-%Y")
-
-    # Sum of sales per week
-    weekly_sales_df = weekly_sales_df.groupby("Invoice Week")["Item Total"].sum().reset_index()
-
-    # Adding percentage change
-    weekly_sales_df["Weekly Growth"] = weekly_sales_df["Item Total"].pct_change()
-
-    return weekly_sales_df
-
-
-def monthly_sales_data(df):
-    monthly_sales_df = df.copy()
-
-    # Adding month column
-    monthly_sales_df["Invoice Month"] = pd.to_datetime(monthly_sales_df["Invoice Date"].dt.strftime("%b %Y"),
-                                                       format="%b %Y")
-
-    # Sum of sales per month
-    monthly_sales_df = monthly_sales_df.groupby("Invoice Month")["Item Total"].sum().reset_index()
-
-    return monthly_sales_df
-
-
-def get_diff_data(df):
-    df["Item Total Diff"] = df["Item Total"].diff()
-    df = df.dropna()
-    return df
-
-
-def time_plot(df, x_col, y_col, title):
-    fig, ax = plt.subplots(figsize=(15, 5))
-
+# Finding SARIMA parameters
+best_fit_parameters = forecasting_functions.find_best_fit_parameters(daily_sales_data,
+                                                                     forecasting_functions.pdq,
+                                                                     forecasting_functions.seasonal_pdq)
+forecasting_model = forecasting_functions.sarima_forecast(daily_sales_data,
+                                                          best_fit_parameters.split(" x ")[0],
+                                                          best_fit_parameters.split(" x ")[1])
+forecasted_data = forecasting_functions.forecast_steps(daily_sales_data, 15)
 
 # Generating separate dataframes for difference months
 sales_dfs = []
