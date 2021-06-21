@@ -12,6 +12,7 @@ import seaborn as sns  # Advanced visualization based on matplotlib
 
 # Custom functions
 import constants
+import item_analysis
 import utility_functions
 import data_functions
 import visual_functions
@@ -20,7 +21,7 @@ import market_basket_analysis
 
 # Combining and cleaning data
 sales_data = data_functions.combine_data(constants.raw_data_folder, constants.sales_data_csv_list)
-sales_data = data_functions.clean_zoho_data(sales_data)
+sales_data = data_functions.clean_zoho_sales_data(sales_data)
 
 utility_functions.save_df_to_csv(sales_data, constants.calculated_data_folder, "sales_data")
 
@@ -64,6 +65,16 @@ monthly_sales_data = sales_data["Item Total"].resample("MS").sum()  # M for mont
 # forecasted_data = forecasting_functions.forecast_steps(daily_sales_data, 15)
 
 # Finding similar products
-only_dry_data = sales_data[(sales_data["CF.Material Type"] == "Dry Goods")]
-rules = market_basket_analysis.define_frequent_items(only_dry_data)
+only_faridabad_data = sales_data[(sales_data["Invoice Number"].str.startswith("DBHFD"))]
+utility_functions.save_df_to_csv(only_faridabad_data, constants.calculated_data_folder, "sales_data_faridabad")
+
+only_delhi_data = sales_data[(sales_data["Invoice Number"].str.startswith("AD"))]
+utility_functions.save_df_to_csv(only_delhi_data, constants.calculated_data_folder, "sales_data_delhi")
+
+rules = market_basket_analysis.define_frequent_items(only_faridabad_data)
 utility_functions.save_df_to_csv(rules, constants.calculated_data_folder, "apriori_rules")
+
+# ITEM ANALYSIS
+item_list = item_analysis.clean_zoho_item_data(
+    pd.read_csv(constants.raw_data_folder + "burgrill_item_20210620_closing.csv"))
+item_report = item_analysis.generate_product_report(item_list, sales_data)

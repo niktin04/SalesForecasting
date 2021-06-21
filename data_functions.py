@@ -29,7 +29,7 @@ def combine_data(data_folder, files_list):
 
 
 # CLEANING DATA
-def clean_zoho_data(df):
+def clean_zoho_sales_data(df):
     if debug:
         print("Cleaning dataframe...")
 

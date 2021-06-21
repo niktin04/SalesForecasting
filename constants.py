@@ -1,6 +1,8 @@
-# Data path and links
+# Data paths
 calculated_data_folder = "calculated_data/"
 raw_data_folder = "raw_data/"
+
+# Data links
 sales_data_csv_list = [
     "burgrill_sales_2020_12.csv",
     "burgrill_sales_2021_01.csv",
@@ -12,3 +14,6 @@ sales_data_csv_list = [
 purchase_data_csv_list = [
     "burgrill_purchase_2020_12_2021_05.csv",
 ]
+
+# Debugging
+debug = True
